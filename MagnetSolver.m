@@ -49,24 +49,30 @@ target=target*10^3;
 % we begin by solving the Hamiltonian for B up to linear order only. This
 % completely linearizes the problem and provides an initial guess.
 permutations=6;
-iter=size(target,1); % number of spectra
-Binit=zeros(iter,size(target,2)/2);
+%iter=size(target,1); % number of spectra
+iter=4; % minimum number of spectra needed to calibrate a_mn and D's
+Binit=zeros(iter,size(target,2)/2); % contains our linear guess encoded as Bz's along each NV axis
 B=zeros(permutations,iter,3);
+Dinit=Binit;
+B0init=Binit; thetainit=Binit; phiinit=Binit; % same info as Binit encoded as [mag theta phi]
 residual=NaN(permutations,iter);
-Dinit=Binit; B0init=Binit; thetainit=Binit; phiinit=Binit;
 success=0;
-% The nonlinear solver is extremely reliant on the initial guess. To
-% exhaust all possible guesses, we permute all three non-111 axes in every
-% possible configuration (six).
+
 for k=1:permutations
+	% The nonlinear solver is extremely reliant on the initial guess. To
+	% exhaust all possible guesses, we permute all three non-111 axes in every
+	% possible configuration (six).
     targetNew=PermuteNon111(target,k);
+	
     for j=1:iter
-        [Binit(j,:), Dinit(j,:)]=LinearGuess(targetNew(j,:)); 
         % index 1 is spectrum number; index 2 is Bz along each NV axis for
         % Binit, coefficient of Sz^2 for Del (4 total)
-        [B0init(j,:), thetainit(j,:), phiinit(j,:)]=SolveB(Binit(j,:)); 
+        [Binit(j,:), Dinit(j,:)]=LinearGuess(targetNew(j,:)); 
+		
         % index 1 is spectrum number; index 2 is solution for (4 choose 3)
-        % NV axes, four possibilities
+        % NV axes, four possibilities        
+		[B0init(j,:), thetainit(j,:), phiinit(j,:)]=SolveB(Binit(j,:)); 
+
     end
     Dinit=min(Dinit); 
     % vector of length four. This gives you an upper bound on the
